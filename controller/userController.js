@@ -3,9 +3,10 @@ const { StatusCodes } = require("http-status-codes");
 const userController = {
   create: async (req, res) => {
     try {
-      const { name, password, role } = req.body;
+      const { name, email, password, role } = req.body;
       let data = await User.create({
         name,
+        email,
         password,
         role,
       });
@@ -17,6 +18,43 @@ const userController = {
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ msg: err.message });
+    }
+  },
+  login: async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      //if login through email
+      if (email) {
+        let extEmail = await User.findOne({ email });
+        console.log(extEmail);
+        if (!extEmail)
+          return res
+            .status(StatusCodes.CONFLICT)
+            .json({ msg: `${email} is not registered`, success: false });
+
+        //comparing the password(string,hash)
+        console.log(password, extEmail.password);
+        let isMatch = password === extEmail.password;
+        if (!isMatch)
+          return res
+            .status(StatusCodes.UNAUTHORIZED)
+            .json({ msg: `password not matched`, success: false });
+        res.status(StatusCodes.OK).json({
+          msg: `login success`,
+          success: true,
+          user: {
+            email: extEmail.email,
+            role: extEmail.role,
+            username: extEmail.name,
+            id:extEmail._id,
+          },
+        });
+      }
+    } catch (err) {
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ msg: err.message, success: false });
     }
   },
   read: async (req, res) => {
@@ -73,7 +111,7 @@ const userController = {
     } catch (err) {
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ msg: err.message});
+        .json({ msg: err.message });
     }
   },
 };

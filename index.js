@@ -9,6 +9,16 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 app.use("/api/user", require("./routes/userRoute"));
+app.use(express.static("public"));
+app.use(express.static("build"));
+
+if (process.env.SERVER === "production") {
+  // executes in production mode
+  app.use(`/`, (req, res, next) => {
+    return res.sendFile(path.resolve(__dirname, `./build/index.html`));
+    next();
+  });
+}
 
 app.all(`*`, (req, res) => {
   res.status(404).json({ msg: `Requset not found` });

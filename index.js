@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
+
 const cors = require("cors");
+const path = require("path");
 const connectDB = require("./db/connect");
 const PORT = 3333;
 
@@ -12,18 +14,10 @@ app.use("/api/user", require("./routes/userRoute"));
 app.use(express.static("public"));
 app.use(express.static("build"));
 
-if (process.env.SERVER === "production") {
-  // executes in production mode
-  app.use(`/`, (req, res, next) => {
-    return res.sendFile(path.resolve(__dirname, `./build/index.html`));
-    next();
-  });
-}
-
-app.all(`*`, (req, res) => {
-  res.status(404).json({ msg: `Requset not found` });
+app.use(express.static(path.resolve(__dirname, "build")));
+app.use(`/*`, (req, res) => {
+  res.sendFile(path.resolve(__dirname, "build", "index.html"));
 });
-
 app.listen(PORT, () => {
   connectDB();
   console.log(`server is running at @ http://localhost:${PORT}`);
